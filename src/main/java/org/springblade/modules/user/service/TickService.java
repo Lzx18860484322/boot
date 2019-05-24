@@ -17,10 +17,10 @@ public class TickService {
     @Autowired
     private SimpMessagingTemplate template;
 
-    @Scheduled(fixedDelay = 1000)
-    public void tick() {
-        String currentTime = DateTimeFormatter.ISO_DATE_TIME.format(LocalDateTime.now());
-        log.info("Message send to client: {}", currentTime);
-        template.convertAndSend("/global-message/tick", currentTime);
-    }
+//    @Scheduled(fixedDelay = 1000)
+//    public void tick() {
+//        String currentTime = DateTimeFormatter.ISO_DATE_TIME.format(LocalDateTime.now());
+//        log.info("Message send to client: {}", currentTime);
+//        template.convertAndSend("/global-message/tick", currentTime);
+//    }
 }

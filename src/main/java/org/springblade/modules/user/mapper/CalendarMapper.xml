@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.springblade.modules.user.mapper.CalendarMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="calendarResultMap" type="org.springblade.modules.user.entity.Calendar">
+        <id column="id" property="id"/>
+        <result column="title" property="title"/>
+        <result column="start" property="start"/>
+        <result column="end" property="end"/>
+        <result column="all_day" property="allDay"/>
+        <result column="color" property="color"/>
+        <result column="url" property="url"/>
+    </resultMap>
+
+
+    <select id="selectCalendarPage" resultMap="calendarResultMap">
+        select * from user_calendar where is_deleted = 0
+    </select>
+
+    <insert id="insert" parameterType="org.springblade.modules.user.entity.Calendar">
+        <selectKey keyProperty="id" resultType="String" order="BEFORE">
+            select replace(uuid(),'-','') from dual
+        </selectKey>
+        insert into `user_calendar`(id,`title`,`start`, `end`, `all_day`,color,url)
+        values(#{id},#{title}, #{start}, #{end}, #{allDay}, #{color}
+        , #{url})
+    </insert>
+
+    <select id="findByjson" resultMap="calendarResultMap">
+        <![CDATA[select * from user_calendar
+        where `start`>=#{start} and `start`<=#{end} ]]>
+    </select>
+
+    <select id="getById" resultMap="calendarResultMap">
+        <![CDATA[select *,`start` from user_calendar
+        where id=#{id} ]]>
+    </select>
+
+    <update id="updateById" parameterType="org.springblade.modules.user.entity.Calendar">
+        UPDATE user_calendar  SET title=#{title},
+`start`=#{start},
+end=#{end},
+all_day=#{allDay},
+color=#{color}  WHERE id=#{id}
+    </update>
+
+
+
+</mapper>

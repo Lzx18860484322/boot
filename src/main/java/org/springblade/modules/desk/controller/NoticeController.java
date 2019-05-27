@@ -112,8 +112,29 @@ public class NoticeController extends BladeController implements CacheNames {
 	@ApiOperation(value = "逻辑删除", notes = "传入notice", position = 7)
 	public R remove(@ApiParam(value = "主键集合") @RequestParam String ids) {
 		boolean temp = noticeService.deleteLogic(Func.toIntList(ids));
+
 		return R.status(temp);
 	}
+
+//	@GetMapping(params = "id")
+//	public NoticeVO readNotice(@ApiParam(value = "主键集合") @RequestParam String id) {
+//		NoticeVO vo = new NoticeVO();
+//		Notice notice = noticeDao.getById(id);
+//		if (notice == null || notice.getStatus() == Status.DRAFT) {
+//			return vo;
+//		}
+//		vo.setNotice(notice);
+//		noticeDao.saveReadRecord(notice.getId(), UserUtil.getCurrentUser().getId());
+//		List<User> users = noticeDao.listReadUsers(id);
+//		vo.setUsers(users);
+//
+//		return vo;
+//	}
+
+
+
+
+
 
 	/**
 	 * 获取消息

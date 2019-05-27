@@ -1,339 +1,201 @@
+/**
+ * Copyright (c) 2018-2028, Chill Zhuang 庄骞 (smallchill@163.com).
+ * <p>
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ * <p>
+ * http://www.apache.org/licenses/LICENSE-2.0
+ * <p>
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.springblade.modules.user.controller;
 
-
-import org.springblade.modules.user.model.Calendar;
-import org.springblade.modules.user.service.CalendarService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.fasterxml.jackson.databind.util.JSONPObject;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
+import lombok.AllArgsConstructor;
+import org.springblade.core.boot.ctrl.BladeController;
+import org.springblade.core.mp.support.Condition;
+import org.springblade.core.mp.support.Query;
+import org.springblade.core.tool.api.R;
+import org.springblade.core.tool.utils.Func;
+import org.springblade.modules.user.entity.Calendar;
+import org.springblade.modules.user.service.ICalendarService;
+import org.springblade.modules.user.vo.CalendarVO;
+import org.springblade.modules.user.wrapper.CalendarWrapper;
 import org.springframework.web.bind.annotation.*;
 
-import java.sql.Date;
+import javax.validation.Valid;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Date;
+import java.util.List;
+import java.util.Random;
 
-@Controller
-@RequestMapping("/calendar")
-public class CalendarController {
+/**
+ *  控制器
+ *
+ * @author Blade
+ * @since 2019-05-25
+ */
+@RestController
+@AllArgsConstructor
+@RequestMapping("/user/calendar")
+@Api(value = "", tags = "接口")
+public class CalendarController extends BladeController {
 
-	@Autowired
-	private CalendarService calendarService;
+	private ICalendarService calendarService;
 
-	private static final long time_F = 3600000;
+//	private IDictClient dictClient;
 
 	@ResponseBody
 	@GetMapping(value = "/json")
-	public List<Calendar> app(Long start,
-							  Long end,
-							  String _,
-							  String type
-	) {
-		return calendarService.findByjson(start, end, type);
+	public List<Calendar> app(String start,
+							  String end
+	) throws ParseException {
+		System.out.println(start.length());
+		String startD=start.substring(1,start.length()-1);
+		String endD=end.substring(1,end.length()-1);
+		SimpleDateFormat dateFormat=new SimpleDateFormat("yyyy-MM-dd");
+		return calendarService.findByjson(dateFormat.parse(startD), dateFormat.parse(endD));
 	}
 
-	@GetMapping("/event")
-	public String eventIndex(Model model, String date, String end, String action,
-							 @RequestParam(value = "id", required = false)String id) {
-		if (action.equals("edit")) {
-			model.addAttribute("add_display", "display:none");
-			Calendar calendar = calendarService.findOne(id);
-			SimpleDateFormat simpleDateFormat;
-			SimpleDateFormat simpleDateFormat1 = new SimpleDateFormat("yyyy-MM-dd");
-			if (calendar.getAllDay()) {
-				simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd");
-			} else {
-				simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-			}
-			SimpleDateFormat simpleDateFormath = new SimpleDateFormat("HH");
-			SimpleDateFormat simpleDateFormatm = new SimpleDateFormat("mm");
-			try {
-				String $endtime = calendar.getEnd();
-				model.addAttribute("endtime", $endtime);
-				if ($endtime.equals("0")) {
-					model.addAttribute("end_d", calendar.getStart());
-					model.addAttribute("end_chk", "");
-					model.addAttribute("end_display", "display:none");
-				} else {
-					model.addAttribute("end_d", simpleDateFormat1.format(simpleDateFormat1.parse(calendar.getEnd())));
-					if (!calendar.getAllDay()) {
-						model.addAttribute("end_h", simpleDateFormath.format(simpleDateFormat.parse(calendar.getEnd())));
-						model.addAttribute("end_m", simpleDateFormatm.format(simpleDateFormat.parse(calendar.getEnd())));
-					}
-					model.addAttribute("end_display", "");
-					model.addAttribute("end_chk", "checked");
-				}
-				model.addAttribute("id", calendar.getId());
-				model.addAttribute("title", calendar.getTitle());
-				model.addAttribute("starttime", calendar.getStart());
-				model.addAttribute("start_d", simpleDateFormat1.format(simpleDateFormat1.parse(calendar.getStart())));
-				if (!calendar.getAllDay()) {
-					model.addAttribute("start_h", simpleDateFormath.format(simpleDateFormat.parse(calendar.getStart())));
-					model.addAttribute("start_m", simpleDateFormatm.format(simpleDateFormat.parse(calendar.getStart())));
-				}
-				model.addAttribute("allday", calendar.getAllDay());
 
-				if (calendar.getAllDay()) {
-					model.addAttribute("display", "display:none");
-					model.addAttribute("allday_chk", "checked");
-				} else {
-					model.addAttribute("display", "");
-					model.addAttribute("allday_chk", "");
-				}
-			} catch (Exception e) {
-				System.out.println(e.getMessage());
-			}
-		} else if (action.equals("add")) {
-			model.addAttribute("edit_display", "display:none");
-			model.addAttribute("date", date);
-			model.addAttribute("enddate", end);
-			if (date == end) model.addAttribute("enddate", "");
-			if (end == null) {
-				model.addAttribute("display", "display:none");
-				model.addAttribute("enddate", date);
-				model.addAttribute("chk", "");
-			} else {
-				model.addAttribute("display", "");
-				model.addAttribute("chk", "checked");
-			}
-			//类型
-
-			List<Map> mapList=new ArrayList<>();
-			Map map = new HashMap();
-			map.put("id","1001");
-			map.put("name","alibaba");
-			mapList.add(map);
-			model.addAttribute("order", mapList);
-		}
-		model.addAttribute("action", action);
-		return "temp/event";
+	/**
+	* 详情
+	*/
+	@GetMapping("/detail")
+	@ApiOperation(value = "详情", notes = "传入calendar", position = 1)
+	public R<CalendarVO> detail(Calendar calendar) {
+		Calendar detail = calendarService.getOne(Condition.getQueryWrapper(calendar));
+		CalendarWrapper calendarWrapper = new CalendarWrapper();
+		return R.data(calendarWrapper.entityVO(detail));
 	}
 
-	@ResponseBody
-	@PostMapping(value = "/add")
-	public String app(String event,
-					  String startdate,
-					  String s_hour,
-					  String s_minute,
-					  String enddate,
-					  String e_hour,
-					  String e_minute,
-					  String isallday,
-					  String action,
-					  String isend,
-					  String id,
-					  Integer daydiff, Integer minudiff, Boolean allday, String order_id, String type) {
-		/*
-		 * DOED 添加
-		 * */
-		if (action == "add" || action.equals("add")) {
-			String s_time = s_hour + ":" + s_minute + ":00";//开始时间
-			String e_time = e_hour + ":" + e_minute + ":00";//结束时间
-			String starttime;
-			String endtime = null;
-			if (isend == null) {
-				isend = "";
-			}
-			if (isallday == null) {
-				isallday = "";
-			}
-			if (isallday.equals("1") && isend.equals("1")) {
-				starttime = startdate;
-				endtime = enddate;
-			} else if (isallday.equals("1") && isend.equals("")) {
-				starttime = startdate;
-				endtime = "0";
-			} else if (isallday.equals("") && isend.equals("1")) {
-				starttime = startdate + " " + s_time;
-				endtime = enddate + " " + e_time;
-			} else {
-				starttime = startdate + " " + s_time;
-			}
-			String[] array = {"#360", "#f30", "#06c"};
-			int ran = new Random().nextInt(2);
-			String color = array[ran];
-			Boolean isalldays = isallday.equals("1");
-			/*
-			 * TODO 判断是否可以预约这个课时
-			 * */
-//            UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext()
-//                    .getAuthentication()
-//                    .getPrincipal();
-//            userDetails.getAuthorities();
-//            GrantedAuthority grantedAuthority = userDetails.getAuthorities().iterator().next();
-//            if (type!=null&&grantedAuthority.getAuthority().equals("ADMIN")) {
-//                type = "time";
-//            }
-//            else{
-//                type = "reserve";
-//            }
-			Integer calendar = calendarService.save(new Calendar(event, starttime, endtime, isalldays, color, order_id, "123", type));
-			if (calendar != null && calendar == 1) {
-				return "1";
-			} else {
-				return "写入失败！";
-			}
-			/*
-			 * DOED 删除
-			 * */
-		} else if (action == "del" || action.equals("del")) {
-			try {
-				calendarService.delete(id);
-				return "1";
-			} catch (Exception e) {
-				System.out.println(e.getMessage());
-				return "删除失败！";
-			}
-			/*
-			 * DOED 修改
-			 * */
-		} else if (action.equals("edit")) {
 
-			if (id == null || id.equals("")) {
-				return "事件不存在！";
-			}
-			if (isend == null) {
-				isend = "";
-			}
-			if (isallday == null) {
-				isallday = "";
-			}
-			String starttime;
-			String endtime;
-			if (s_hour == null || s_hour.equals("")) {
-				s_hour = "00";
-			}
-			if (s_minute == null || s_minute.equals("")) {
-				s_minute = "00";
-			}
-			if (e_hour == null || e_hour.equals("")) {
-				e_hour = "00";
-			}
-			if (e_minute == null || e_minute.equals("")) {
-				e_minute = "00";
-			}
-			String s_time = s_hour + ":" + s_minute + ":00";//开始时间
-			String e_time = e_hour + ":" + e_minute + ":00";//结束时间
-			Calendar calendar = calendarService.findOne(id);
-			if (isallday.equals("1") && isend.equals("1")) {
-				starttime = startdate;
-				endtime = enddate;
-			} else if (isallday.equals("1") && isend.equals("")) {
-				starttime = startdate.split(" ")[0] + " " + s_time;
-				endtime = "0";
-			} else if (isallday.equals("") && isend.equals("1")) {
-				if (calendar.getAllDay()) {
-					starttime = startdate + " " + s_time;
-					endtime = enddate + " " + e_time;
-				} else {
-					starttime = startdate.split(" ")[0] + " " + s_time;
-					endtime = enddate.split(" ")[0] + " " + e_time;
-				}
-			} else {
-				starttime = startdate.split(" ")[0] + " " + s_time;
-				endtime = "0";
-			}
-			Boolean isalldays = isallday.equals("1");
 
-			calendar.edit(event, starttime, endtime, isalldays);
-			Integer calendars = calendarService.update(calendar);
-			if (calendars != null && calendars == 1) {
-				return "1";
-			} else {
-				return "写入失败！";
-			}
-		}
-		/*
-		 * DOED 拖拉
-		 * */
-		else if (action == "drag" || action.equals("drag")) {
-			try {
-				SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				SimpleDateFormat simpleDateFormat1 = new SimpleDateFormat("yyyy-MM-dd");
-				long daydiffs = daydiff * 24 * 60 * 60 * 1000;
-				long minudiffs = minudiff * 60 * 1000;
-//                System.out.println("分钟:"+minudiff+"毫秒数:"+minudiffs);
-//                System.out.println("天数:"+daydiffs+"毫秒数:"+minudiffs);
-				Calendar calendar = calendarService.findOne(id);
-				Integer calendars;
-				long start;
-				long end;
-				if (calendar.getAllDay()) {
-					start = simpleDateFormat1.parse(calendar.getStart()).getTime();
-				} else {
-					start = simpleDateFormat.parse(calendar.getStart()).getTime();
-				}
-				if (allday) {
-					if (calendar.getEnd().equals("0")) {
-						calendar.setStart(simpleDateFormat1.format(new Date(start + daydiffs)));
-					} else {
-						if (calendar.getAllDay()) {
-							end = simpleDateFormat1.parse(calendar.getEnd()).getTime();
-						} else {
-							end = simpleDateFormat.parse(calendar.getEnd()).getTime();
-						}
-						calendar.setStart(simpleDateFormat1.format(new Date(start + daydiffs)));
-						calendar.setEnd(simpleDateFormat1.format(new Date(end + daydiffs)));
-					}
-				} else {
-					long $difftime = daydiffs + minudiffs;
-					if (calendar.getEnd().equals("0")) {
-						calendar.setStart(simpleDateFormat.format(new Date(start + $difftime)));
-					} else {
-						if (calendar.getAllDay()) {
-							end = simpleDateFormat1.parse(calendar.getEnd()).getTime();
-						} else {
-							end = simpleDateFormat.parse(calendar.getEnd()).getTime();
-						}
-//                     当前一个是全天的时候才添加一个一小时时间
-						if (calendar.getAllDay()) {
-							end = end + time_F;
-						}
-						calendar.setStart(simpleDateFormat.format(new Date(start + $difftime)));
-						calendar.setEnd(simpleDateFormat.format(new Date(end + $difftime)));
-					}
-				}
-				calendar.setAllDay(allday);
-				calendars = calendarService.update(calendar);
-				if (calendars != null && calendars == 1) {
-					return "1";
-				} else {
-					return "出错了！";
-				}
-			} catch (Exception e) {
-				System.out.println(e.getMessage());
-			}
-//        拉伸
-		} else if (action.equals("resize")) {
-			try {
-				SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-				long daydiffs = daydiff * 24 * 60 * 60 * 1000;
-				long minudiffs = minudiff * 60 * 1000;
-				Calendar calendar = calendarService.findOne(id);
-				Integer calendars;
-				long $difftime = daydiffs + minudiffs;
-				if (calendar.getEnd().equals("0")) {
-					long start = simpleDateFormat.parse(calendar.getStart()).getTime();
-//                    $sql = "update `calendar` set endtime=starttime+'$difftime' where id='$id'";
-					calendar.setEnd(simpleDateFormat.format(new Date(start + $difftime)));
-					calendars = calendarService.save(calendar);
-				} else {
-					long end = simpleDateFormat.parse(calendar.getEnd()).getTime();
-//                    $sql = "update `calendar` set endtime=endtime+'$difftime' where id='$id'";
-					calendar.setEnd(simpleDateFormat.format(new Date(end + $difftime)));
-					calendars = calendarService.update(calendar);
-				}
-				if (calendars == 1) {
-					return "1";
-				} else {
-					return "出错了！";
-				}
-			} catch (Exception e) {
-				System.out.println(e.getMessage());
-			}
-		}
-
-		return null;
+	/**
+	* 分页 
+	*/
+	@GetMapping("/list")
+	@ApiOperation(value = "分页", notes = "传入calendar", position = 2)
+	public R<IPage<CalendarVO>> list(Calendar calendar, Query query) {
+		IPage<Calendar> pages = calendarService.page(Condition.getPage(query), Condition.getQueryWrapper(calendar));
+		CalendarWrapper calendarWrapper = new CalendarWrapper();
+		return R.data(calendarWrapper.pageVO(pages));
 	}
+
+	/**
+	* 自定义分页 
+	*/
+	@GetMapping("/page")
+	@ApiOperation(value = "分页", notes = "传入calendar", position = 3)
+	public R<IPage<CalendarVO>> page(CalendarVO calendar, Query query) {
+		IPage<CalendarVO> pages = calendarService.selectCalendarPage(Condition.getPage(query), calendar);
+		return R.data(pages);
+	}
+
+	/**
+	* 新增 
+	*/
+	@PostMapping("/save")
+	@ApiOperation(value = "新增", notes = "传入calendar", position = 4)
+	public R save(@Valid @RequestBody Calendar calendar) {
+		return R.status(calendarService.save(calendar));
+	}
+
+	/**
+	* 修改 
+	*/
+	@PostMapping("/update")
+	@ApiOperation(value = "修改", notes = "传入calendar", position = 5)
+	public R update(@Valid @RequestBody Calendar calendar) {
+		return R.status(calendarService.updateById(calendar));
+	}
+
+	/**
+	 * 修改
+	 */
+	@PostMapping("/event")
+	@ApiOperation(value = "修改", notes = "传入calendar", position = 5)
+	public R updateEvents(@Valid @RequestBody JSONObject jsonObject) throws ParseException {
+		Calendar calendar=calendarService.getById(jsonObject.getString("id"));
+		String start=jsonObject.getString("start");
+		String end=jsonObject.getString("end");
+        SimpleDateFormat simpleDate=new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+
+		Boolean allDay=jsonObject.getBoolean("allDay");
+
+		switch (Update.valueOf(jsonObject.getString("type"))) {
+			case DROP:
+			{
+				if(allDay){
+					start=start.split(" ")[0];
+					end=start;
+					simpleDate=new SimpleDateFormat("yyyy-MM-dd");
+				}
+				else if(calendar.getAllDay()){
+//					start=start.split(" ")[0];
+					end=simpleDate.format(new Date(simpleDate.parse(start).getTime()+60*60*1000));
+				}
+				calendar.setAllDay(allDay);
+                calendar.setStart(simpleDate.parse(start));
+				calendar.setEnd(simpleDate.parse(end));
+				break;
+			}
+			case RESIZE:
+			{
+				calendar.setAllDay(allDay);
+				calendar.setEnd(simpleDate.parse(end));
+				break;
+			}
+		}
+		return R.status(calendarService.updateById(calendar));
+	}
+
+	enum Update{
+		EDIT,
+		DROP,
+		RESIZE
+	}
+
+
+
+
+	/**
+	* 新增或修改 
+	*/
+	@PostMapping("/submit")
+	@ApiOperation(value = "新增或修改", notes = "传入calendar", position = 6)
+	public R submit(@Valid @RequestBody Calendar calendar) {
+		String[] array = {"#360", "#f30", "#06c"};
+		int ran = new Random().nextInt(2);
+		String color = array[ran];
+		calendar.setColor(color);
+		return R.status(calendarService.saveOrUpdate(calendar));
+	}
+
+	/**
+	* 删除 
+	*/
+	@PostMapping("/remove")
+	@ApiOperation(value = "删除", notes = "传入ids", position = 7)
+	public R remove(@ApiParam(value = "主键集合", required = true) @RequestParam String ids) {
+		return R.status(calendarService.removeByIds(Func.toIntList(ids)));
+	}
+
+//
+//	public static void main(String[] args) {
+//		System.out.println("2019-04-28");
+//	}
 
 
 }

@@ -25,6 +25,7 @@
         <docker.registry.url>192.168.186.129</docker.registry.url>
         <docker.registry.host>http://${docker.registry.url}:2375</docker.registry.host>
         <docker.plugin.version>1.2.0</docker.plugin.version>
+        <db.pass>root</db.pass>
     </properties>
 
     <dependencyManagement>
@@ -90,9 +91,10 @@
     <build>
         <finalName>SpringBlade</finalName>
         <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-            </resource>
+                <resource>
+                    <directory>src/main/resources</directory>
+                    <filtering>true</filtering>
+                </resource>
             <resource>
                 <directory>src/main/java</directory>
                 <includes>
